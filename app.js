@@ -6,7 +6,8 @@ const engine = require('ejs-mate');
 const wrapAsync = require('./utils/wrapAsync');
 const ExpressError = require('./utils/ExpressError');
 const Campground = require("./models/campground");
-const { campgroundSchema } = require('./schemas');
+const { campgroundSchema, reviewSchema } = require('./schemas');
+const Review = require('./models/review');
 
 mongoose.connect("mongodb://localhost:27017/yelp-camp")
     .then(() => {
@@ -28,7 +29,17 @@ app.use(methodOverride('_method'));
 
 const validateCampground = (req, res, next) => {
     const { error } = campgroundSchema.validate(req.body);
-    if(error){
+    if (error){
+        const msg = error.details.map(el => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+}
+
+const validateReview = (req, res, next) => {
+    const { error } = reviewSchema.validate(req.body);
+    if (error){
         const msg = error.details.map(el => el.message).join(',');
         throw new ExpressError(msg, 400);
     } else {
@@ -58,7 +69,7 @@ app.get("/campgrounds/new", (req, res) => {
 // Specific campground
 app.get("/campgrounds/:id", wrapAsync(async (req, res) => {
     const { id } = req.params;
-    const campground = await Campground.findById(id);
+    const campground = await Campground.findById(id).populate('reviews');
     res.render('campgrounds/show', { campground });
 }));
 
@@ -82,6 +93,25 @@ app.delete("/campgrounds/:id", wrapAsync(async (req, res) => {
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
 }));
+
+
+// Add a review to specific campground
+app.post("/campgrounds/:id/reviews", validateReview, wrapAsync(async (req, res) => {
+    const campground = await Campground.findById(req.params.id);
+    const review = new Review(req.body.review);
+    campground.reviews.push(review);
+    campground.save();
+    review.save();
+    res.redirect(`/campgrounds/${campground._id}`);
+}))
+
+// Delete a review from inside a campground
+app.delete("/campgrounds/:id/reviews/:reviewId", wrapAsync(async (req, res) => {
+    const { id, reviewId } = req.params;
+    await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await Review.findByIdAndDelete(req.params.reviewId);
+    res.redirect(`/campgrounds/${id}`);
+}))
 
 // URL that doesn't exist
 app.all('*', (req, res, next) => {
