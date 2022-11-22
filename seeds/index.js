@@ -28,7 +28,8 @@ const seedDB = async () => {
             location: `${somePlace.city}, ${somePlace.state}`,
             image: 'https://images.unsplash.com/photo-1518602164578-cd0074062767?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
             description: 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Natus ea quos minima omnis aut, temporibus dicta quo deleniti nobis assumenda vero officia ipsum suscipit aliquam, error nostrum illo! In, omnis?',
-            price: price
+            price: price,
+            author: '637a0e27d9859f0b6b91e4dc'
         });
         
         await camp.save();
