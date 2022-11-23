@@ -6,7 +6,7 @@
     
     <div class="col-6 offset-3">
         
-        <form class="form needs-validation" action="/campgrounds/<%= campground._id %>?_method=PUT" method="post" novalidate>
+        <form class="form needs-validation" action="/campgrounds/<%= campground._id %>?_method=PUT" method="post" novalidate enctype="multipart/form-data">
             
             <div class="mb-3">
                 <label class="form-label" for="title">Title:</label>
@@ -25,11 +25,8 @@
             </div>
             
             <div class="mb-3">
-                <label class="form-label" for="image">Image URL:</label>
-                <input class="form-control" type="text" name="campground[image]" id="image" value="<%= campground.image %>" required> 
-                <div class="valid-feedback">
-                    Looks good!
-                </div>
+                <label for="formFile" class="form-label">Add Images:</label>
+                <input class="form-control" type="file" id="formFile" name="image" multiple>
             </div>
 
             <div class="mb-3">
@@ -48,6 +45,22 @@
                 <textarea class="form-control" type="text" name="campground[description]" id="description" required><%= campground.description %></textarea>
                 <div class="valid-feedback">
                     Looks good!
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="row">
+                    <% campground.images.forEach(function(image, i) { %> 
+                        <div class="col-3">
+                            <img src="<%= image.thumbnail %>" class="img-thumbnail" alt="">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="deleteImages[]" value="<%= image.name %>" id="image-<%= i %>">
+                                <label class="form-check-label" for="image-<%= i %>">
+                                  Delete?
+                                </label>
+                            </div>
+                        </div>
+                    <% }) %> 
                 </div>
             </div>
             
