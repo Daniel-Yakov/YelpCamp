@@ -9,6 +9,7 @@ const methodOverride = require('method-override');
 const engine = require('ejs-mate');
 const ExpressError = require('./utils/ExpressError');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const flash = require('connect-flash');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
@@ -22,8 +23,8 @@ const userRoutes = require('./routes/users');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require("helmet");
 
-
-mongoose.connect("mongodb://localhost:27017/yelp-camp")
+const dbUrl = "mongodb://localhost:27017/yelp-camp" || process.env.MONGO_ATLAS_URL; 
+mongoose.connect(dbUrl)
     .then(() => {
         console.log('Database connected');
     })
@@ -41,9 +42,20 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(flash());
+
+// The session store
+const store = MongoStore.create({
+    mongoUrl: dbUrl,
+    secret: process.env.SECRET,
+    touchAfter: 24 * 60 * 60
+});
+
+// Congif the session
 app.use(session({
+    store,
     name: 'session',
-    secret: 'thisisnotverysecure',
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -53,7 +65,6 @@ app.use(session({
         httpOnly: true
     }
 }));
-app.use(flash());
 
 // passport configuration
 app.use(passport.initialize());
@@ -143,7 +154,7 @@ app.use((err, req, res, next) => {
 })
 
 
-
-app.listen(3000, () => {
-    console.log('Serving on port 3000');
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Serving on port ${port}`);
 })
